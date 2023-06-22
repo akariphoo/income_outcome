@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Income Outcome Calculation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/argon-design-system-free@1.2.0/assets/css/argon-design-system.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
 </head>
 <body>
     <div class="container-fluid mt-5">
@@ -31,13 +32,7 @@
             </div>
             {{-- lists --}}
             <div class="col-4">
-                <ul class="nav nav-tabs">
-                    <li class="active"><a href="#">Home</a></li>
-                    <li><a href="#">Menu 1</a></li>
-                    <li><a href="#">Menu 2</a></li>
-                    <li><a href="#">Menu 3</a></li>
-                  </ul>
-                <ul class="list-group mt-3">
+                <ul class="list-group mt-3 overflow-auto">
                    @foreach ($income_outcomes as $list)
                         <li class="list-group-item d-flex justify-content-between">
                             <div>
@@ -52,7 +47,7 @@
                             @endif
                             
                         </li>                     
-                   @endforeach                   
+                   @endforeach            
                 </ul>
             </div>
             {{-- bar chart --}}
@@ -79,19 +74,19 @@
              <div class="col-4">
                 <div class="card card-body mt-3">
                     <div class="d-flex justify-content-between">
-                        <h5>Today Chart</h5>
+                        <h5>Monthly Chart</h5>
                         <div>
                             <small class="text text-success">
-                                ဝင်ငွေ + 100 ကျပ်
+                                ဝင်ငွေ + {{ $monthly_income_amount }} ကျပ်
                             </small>
                             <small class="text text-danger ml-3">
-                                ထွက်ငွေ - 50 ကျပ်
+                                ထွက်ငွေ - {{ $monthly_outcome_amount }} ကျပ်
                             </small>
                         </div>
                     </div>
                     <hr class="p-0 m-0">
-                    <div class="mt-3">
-                        <canvas id="in_out"></canvas>
+                    <div class="mt-3" style="width:300px; height:300px; margin-left:150px;">
+                        <canvas id="pie-chart"></canvas>
                     </div>
                 </div>
             </div>
@@ -101,21 +96,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const ctx = document.getElementById('in_out');
-
+        
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: [1,2,3,4,5,6],
+                labels: @json($day_arr),
                 datasets: [
                     {
                         label: 'ဝင်ငွေ',
-                        data: [1,2,3,4,5,6],
+                        data: @json($daily_income_amount),
                         borderWidth: 1,
                         backgroundColor: '#2DCE89'
                     },
                     {
                         label: 'ထွက်ငွေ',
-                        data: [1,2,3,4,5,6],
+                        data: @json($daily_outcome_amount),
                         borderWidth: 1,
                         backgroundColor: '#F53650'
                     },
@@ -128,6 +123,23 @@
                 }
                 }
             }
+        });
+
+        new Chart(document.getElementById("pie-chart"), {
+        	type : 'pie',
+        	data : {
+        		labels : [ "ဝင်ငွေ", "ထွက်ငွေ"],
+        		datasets : [ {
+        			backgroundColor : [ "#2DCE89", "#FB3569" ],
+        			data : [{{ $monthly_income_amount }}, {{ $monthly_outcome_amount }}]
+        		} ]
+        	},
+        	options : {
+        		title : {
+        			display : true,
+        			text : 'Chart JS Pie Chart Example'
+        		}
+        	}
         });
     </script>
 </body>
