@@ -44,8 +44,7 @@
                                 <small class="text text-success"> + {{ $list->amount }}ကျပ်</small>
                             @else
                                 <small class="text text-danger"> - {{ $list->amount }}ကျပ်</small>
-                            @endif
-                            
+                            @endif                            
                         </li>                     
                    @endforeach            
                 </ul>
@@ -62,6 +61,7 @@
                             <small class="text text-danger ml-3">
                                 ထွက်ငွေ - {{ $today_outcome }} ကျပ်
                             </small>
+                            <input type="date" id="daily-date-picker" class="btn btn-white text-dark mb-2 ml-2" name="date">
                         </div>
                     </div>
                     <hr class="p-0 m-0">
@@ -82,11 +82,12 @@
                             <small class="text text-danger ml-3">
                                 ထွက်ငွေ - {{ $monthly_outcome_amount }} ကျပ်
                             </small>
+                            <input type="month" id="monthly-date-picker" class="btn btn-white text-dark mb-2" name="month">
                         </div>
                     </div>
                     <hr class="p-0 m-0">
                     <div class="mt-3" style="width:300px; height:300px; margin-left:150px;">
-                        <canvas id="pie-chart"></canvas>
+                        <canvas id="pie-chart"></canvas>                    
                     </div>
                 </div>
             </div>
@@ -94,44 +95,106 @@
         
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript">
         const ctx = document.getElementById('in_out');
-        
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: @json($day_arr),
-                datasets: [
-                    {
-                        label: 'ဝင်ငွေ',
-                        data: @json($daily_income_amount),
-                        borderWidth: 1,
-                        backgroundColor: '#2DCE89'
-                    },
-                    {
-                        label: 'ထွက်ငွေ',
-                        data: @json($daily_outcome_amount),
-                        borderWidth: 1,
-                        backgroundColor: '#F53650'
-                    },
-                ]
-            },
-            options: {
-                scales: {
-                y: {
-                    beginAtZero: true
-                }
-                }
-            }
-        });
+        var day_arr = @json($day_arr);
+        var daily_income_amount = @json($daily_income_amount);
+        var daily_outcome_amount = @json($daily_outcome_amount);
 
-        new Chart(document.getElementById("pie-chart"), {
+        // for bar chart
+        let barChart = null;
+        let pieChart = null;
+        showBarChart(day_arr, daily_income_amount, daily_outcome_amount);
+
+        // for pie chart
+        showPieChart({{ $monthly_income_amount }}, {{ $monthly_outcome_amount }})
+
+        //daily data
+        $('#daily-date-picker').on('change', function () {
+            var date = $(this).val();
+
+            $.ajax({
+                type: "GET",
+                url: "/income-outcome/get_daily_data",
+                data: {
+                    date: date
+                },
+                success: function(result) {
+                    showBarChart(result['day_arr'], result['daily_income_amount'], result['daily_outcome_amount']);
+                },
+                error: function(result) {
+                    console.log(result)
+                }
+            });
+        })
+
+        //monthly data
+        $('#monthly-date-picker').on('change', function () {
+            var date = $(this).val();
+
+            $.ajax({
+                type: "GET",
+                url: "/income-outcome/get_monthly_data",
+                data: {
+                    date: date
+                },
+                success: function(result) {
+                    console.log(result['monthly_income_amount']);
+                    showPieChart(result['monthly_income_amount'], result['monthly_outcome_amount'])
+                },
+                error: function(result) {
+                    console.log(result)
+                }
+            });
+        })
+
+        // show bar chart
+        function showBarChart(day_arr, daily_income_amount, daily_outcome_amount) {
+            if(barChart != null) {
+                barChart.destroy();
+            }
+               barChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: day_arr,
+                        datasets: [
+                            {
+                                label: 'ဝင်ငွေ',
+                                data: daily_income_amount,
+                                borderWidth: 1,
+                                backgroundColor: '#2DCE89'
+                            },
+                            {
+                                label: 'ထွက်ငွေ',
+                                data: daily_outcome_amount,
+                                borderWidth: 1,
+                                backgroundColor: '#F53650'
+                            },
+                        ]
+                    },
+                    options: {
+                        scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                        }
+                    }
+            });
+        }
+
+        // show pie chart
+        function showPieChart(monthly_income_amount, monthly_outcome_amount) {
+            if( pieChart != null ) {
+                pieChart.destroy();
+            }
+            pieChart = new Chart(document.getElementById("pie-chart"), {
         	type : 'pie',
         	data : {
         		labels : [ "ဝင်ငွေ", "ထွက်ငွေ"],
         		datasets : [ {
         			backgroundColor : [ "#2DCE89", "#FB3569" ],
-        			data : [{{ $monthly_income_amount }}, {{ $monthly_outcome_amount }}]
+        			data : [monthly_income_amount, monthly_outcome_amount]
         		} ]
         	},
         	options : {
@@ -141,6 +204,8 @@
         		}
         	}
         });
+        }
+        
     </script>
 </body>
 </html>

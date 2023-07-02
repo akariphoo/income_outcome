@@ -8,4 +8,10 @@ interface IncomeOutcomeInterface
     
     // store income_outcome datas
     public function store($request, $income_outcome);
+
+    //get daily data
+    public function getDailyData($request);
+
+    // get monthly data
+    public function getMonthlyData($request);
 }
